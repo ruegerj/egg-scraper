@@ -23,7 +23,6 @@ func main() {
 		ParseFunc:   scrapeProductUrls,
 		Exporters:   []export.Exporter{&export.PrettyPrint{}},
 		LogDisabled: true,
-		UserAgent:   "Easter Bunny v24.0",
 	}).Start()
 }
 
