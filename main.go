@@ -19,9 +19,11 @@ func main() {
 	targetUrl = strings.Split(targetUrl, "\n")[0]
 
 	geziyor.NewGeziyor(&geziyor.Options{
-		StartURLs: []string{targetUrl},
-		ParseFunc: scrapeProductUrls,
-		Exporters: []export.Exporter{&export.PrettyPrint{}},
+		StartURLs:   []string{targetUrl},
+		ParseFunc:   scrapeProductUrls,
+		Exporters:   []export.Exporter{&export.PrettyPrint{}},
+		LogDisabled: true,
+		UserAgent:   "Easter Bunny v24.0",
 	}).Start()
 }
 
