@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Let the egg hunt begin :)")
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("🐣 Enter an URL to start the hunt for some juicy eggs:")
 	targetUrl, _ := reader.ReadString('\n')
@@ -21,17 +20,24 @@ func main() {
 
 	geziyor.NewGeziyor(&geziyor.Options{
 		StartURLs: []string{targetUrl},
-		ParseFunc: func(g *geziyor.Geziyor, r *client.Response) {
-			r.HTMLDoc.Find("ul.products-grid>li.item>h2.product-name").Each(func(i int, s *goquery.Selection) {
-				productUrl, exists := s.Find("a").Attr("href")
-				if !exists {
-					return
-				}
-
-				g.Exports <- productUrl
-			})
-
-		},
+		ParseFunc: scrapeProductUrls,
 		Exporters: []export.Exporter{&export.PrettyPrint{}},
 	}).Start()
+}
+
+func scrapeProductUrls(g *geziyor.Geziyor, r *client.Response) {
+	// find all product links on page
+	r.HTMLDoc.Find("ul.products-grid>li.item>h2.product-name").Each(func(i int, s *goquery.Selection) {
+		productUrl, exists := s.Find("a").Attr("href")
+		if !exists {
+			return
+		}
+
+		g.Exports <- productUrl
+	})
+
+	// find next page link and scrape
+	if nextPage, found := r.HTMLDoc.Find("ol>li.next>a.next").First().Attr("href"); found {
+		g.Get(nextPage, scrapeProductUrls)
+	}
 }
