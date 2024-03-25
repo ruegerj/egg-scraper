@@ -28,16 +28,21 @@ func main() {
 func scrapeProductUrls(g *geziyor.Geziyor, r *client.Response) {
 	// find all product links on page
 	r.HTMLDoc.Find("ul.products-grid>li.item>h2.product-name").Each(func(i int, s *goquery.Selection) {
-		productUrl, exists := s.Find("a").Attr("href")
-		if !exists {
-			return
+		if productUrl, exists := s.Find("a").Attr("href"); exists {
+			g.Get(productUrl, scrapeEgg)
 		}
-
-		g.Exports <- productUrl
 	})
 
 	// find next page link and scrape
 	if nextPage, found := r.HTMLDoc.Find("ol>li.next>a.next").First().Attr("href"); found {
 		g.Get(nextPage, scrapeProductUrls)
 	}
+}
+
+func scrapeEgg(g *geziyor.Geziyor, r *client.Response) {
+	if r.HTMLDoc.Find("p.open-contest").First().Index() == -1 {
+		return
+	}
+
+	g.Exports <- r.Request.URL.String()
 }
